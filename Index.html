@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Radio Stream</title>
+  <style>
+    :root {
+      --bg-light: #f6f8fc;
+      --bg-dark: #181a1b;
+      --card-light: #fff;
+      --card-dark: #23262e;
+      --accent: #2a7cff;
+      --accent2: #ff6f61;
+      --text-light: #23262e;
+      --text-dark: #f8f9fa;
+      --radius: 18px;
+      --shadow: 0 6px 32px rgba(42,124,255,0.08);
+      --transition: .23s cubic-bezier(.4,0,.2,1);
+      --footer-h: 90px;
+      --devbar-h: 38px;
+      --header-h: 74px;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+      padding-bottom: calc(var(--footer-h) + var(--devbar-h));
+    }
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--card-light);
+      box-shadow: 0 2px 16px rgba(42,124,255,0.07);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2vw;
+      transition: background var(--transition);
+    }
+    body.dark .header {
+      background: var(--card-dark);
+    }
+    .logo-title {
+      display: flex;
+      align-items: center;
+      gap: 0.7em;
+    }
+    .logo {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,var(--accent),var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6em;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(42,124,255,0.13);
+      user-select: none;
+    }
+    .site-title {
+      font-size: 1.27em;
+      font-weight: 800;
+      letter-spacing: .01em;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 1px 8px rgba(42,124,255,0.05);
+      user-select: none;
+    }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1.1em;
+    }
+    .header-controls select,
+    .header-controls button {
+      font-size: 1em;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      transition: background var(--transition), color var(--transition);
+      padding: 0.4em 1.1em;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(42,124,255,0.10);
+    }
+    .header-controls select {
+      background: #fff;
+      color: #23262e;
+      border: 1px solid #bbb;
+      font-weight: 500;
+      min-width: 110px;
+    }
+    body.dark .header-controls select {
+      background: #222;
+      color: #f8f9fa;
+      border: 1px solid #444;
+    }
+    .header-controls button {
+      background: var(--accent2);
+      color: #fff;
+      font-size: 1.15em;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .search-bar-wrap {
+      position: fixed;
+      top: var(--header-h);
+      left: 0; right: 0;
+      background: var(--card-light);
+      z-index: 9;
+      padding: 0.6em 2vw 0.7em 2vw;
+      box-shadow: 0 2px 10px rgba(42,124,255,0.06);
+      border-bottom: 1px solid #e4e8f0;
+      transition: background var(--transition);
+    }
+    body.dark .search-bar-wrap {
+      background: var(--card-dark);
+      border-bottom: 1px solid #23262e;
+    }
+    .search-bar {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.7em;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 0.7em 1em;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      font-size: 1em;
+      outline: none;
+      transition: border var(--transition);
+      background: #fff;
+      color: #23262e;
+    }
+    body.dark .search-bar input {
+      background: #23262e;
+      color: #f8f9fa;
+      border: 1px solid #444;
+    }
+    .search-bar button {
+      padding: 0.65em 1.1em;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    main {
+      padding: calc(var(--header-h) + 54px) 0 0 0;
+      min-height: 60vh;
+      margin-bottom: calc(var(--footer-h) + var(--devbar-h));
+    }
+    .stations {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.3rem;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0 2vw;
+    }
+    .station {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      background: linear-gradient(100deg,rgba(42,124,255,0.08),rgba(255,111,97,0.04));
+      padding: 1.1rem 1.2rem;
+      border-radius: 13px;
+      box-shadow: 0 2px 14px rgba(42,124,255,0.06);
+      transition: box-shadow var(--transition), background var(--transition);
+      position: relative;
+      cursor: pointer;
+    }
+    .station:hover {
+      box-shadow: 0 6px 28px rgba(42,124,255,0.12);
+      background: linear-gradient(90deg,rgba(42,124,255,0.13),rgba(255,111,97,0.09));
+    }
+    .station-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .station-title {
+      font-weight: 700;
+      font-size: 1.11em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .station-country {
+      font-size: 0.98em;
+      opacity: 0.7;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    .player-btn {
+      background: var(--accent2);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 2.6em;
+      height: 2.6em;
+      font-size: 1.25em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(42,124,255,0.10);
+      transition: background var(--transition), box-shadow var(--transition);
+    }
+    .player-btn:active {
+      background: var(--accent);
+    }
+    .nowplaying {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      background: var(--accent2);
+      color: #fff;
+      font-size: .85em;
+      padding: 0.2em 0.7em;
+      border-radius: 8px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      box-shadow: 0 1px 6px rgba(255,111,97,0.10);
+      opacity: .9;
+      z-index: 2;
+      pointer-events: none;
+      animation: fadeIn .5s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px);}
+      to { opacity: .9; transform: none;}
+    }
+    /* --- Футер --- */
+    .footer {
+      position: fixed;
+      left: 0; right: 0; bottom: var(--devbar-h);
+      height: var(--footer-h);
+      background: var(--card-light);
+      border-top: 1px solid #e4e8f0;
+      box-shadow: 0 -2px 16px rgba(42,124,255,0.07);
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition);
+      padding: 0;
+    }
+    body.dark .footer {
+      background: var(--card-dark);
+      border-top: 1px solid #23262e;
+    }
+    .footer-content {
+      width: 100vw;
+      max-width: 650px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.1em;
+      padding: 0 1.4em;
+    }
+    .footer-btn {
+      background: var(--accent2);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 2.7em;
+      height: 2.7em;
+      font-size: 1.3em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(42,124,255,0.10);
+      transition: background var(--transition);
+      cursor: pointer;
+    }
+    .footer-btn:active {
+      background: var(--accent);
+    }
+    .footer-station {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2em;
+      text-align: center;
+      user-select: none;
+    }
+    .footer-title {
+      font-weight: 700;
+      font-size: 1.08em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+    .footer-country {
+      font-size: 0.95em;
+      opacity: 0.7;
+    }
+    .footer-play {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 2.7em;
+      height: 2.7em;
+      font-size: 1.3em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(42,124,255,0.10);
+      transition: background var(--transition);
+      cursor: pointer;
+      margin-left: 0.7em;
+    }
+    .footer-play:active {
+      background: var(--accent2);
+    }
+    /* --- DevBar --- */
+    .devbar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: var(--devbar-h);
+      background: var(--card-light);
+      color: var(--accent2);
+      border-top: 1px solid #e4e8f0;
+      box-shadow: 0 -1px 8px rgba(42,124,255,0.04);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.03em;
+      font-weight: 500;
+      letter-spacing: .01em;
+      transition: background var(--transition), color var(--transition);
+      user-select: none;
+    }
+    body.dark .devbar {
+      background: var(--card-dark);
+      color: var(--accent2);
+      border-top: 1px solid #23262e;
+    }
+    .devbar a {
+      color: var(--accent2);
+      text-decoration: underline;
+      font-weight: 700;
+      margin-left: 0.2em;
+      margin-right: 0.2em;
+      transition: color var(--transition);
+    }
+    .devbar a:hover {
+      color: var(--accent);
+      text-decoration: underline wavy;
+    }
+    @media (max-width: 700px) {
+      .header, .search-bar-wrap { padding-left: 1vw; padding-right: 1vw;}
+      .footer-content { padding: 0 0.2em;}
+      .footer-title { max-width: 150px;}
+      .stations { padding: 0 1vw;}
+      .devbar { font-size: 0.97em;}
+    }
+    ::selection { background: var(--accent2); color: #fff;}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-title">
+      <div class="logo">🎵</div>
+      <span class="site-title" id="main-title">Radio Stream</span>
+    </div>
+    <div class="header-controls">
+      <select id="lang-switch">
+        <option value="en">English</option>
+        <option value="ua">Українська</option>
+      </select>
+      <button id="theme-toggle" title="Switch theme">🌙</button>
+    </div>
+  </div>
+  <div class="search-bar-wrap">
+    <form class="search-bar" id="search-form" autocomplete="off">
+      <input id="search-input" type="text" placeholder="Search stations..." />
+      <button type="submit" title="Clear" id="clear-btn" style="display:none;">✖️</button>
+    </form>
+  </div>
+  <main>
+    <div class="stations" id="stations-list"></div>
+  </main>
+  <div class="footer" id="footer">
+    <div class="footer-content">
+      <button class="footer-btn" id="prev-btn" title="Prev">&#9664;</button>
+      <div class="footer-station" id="footer-station">
+        <div class="footer-title" id="footer-title">-</div>
+        <div class="footer-country" id="footer-country"></div>
+      </div>
+      <button class="footer-play" id="footer-play" title="Play">▶️</button>
+      <button class="footer-btn" id="next-btn" title="Next">&#9654;</button>
+    </div>
+  </div>
+  <!-- Додатковий футер з вашими даними -->
+  <div class="devbar" id="devbar"></div>
+  <audio id="audio-player" preload="none"></audio>
+  <script>
+    // --- Локалізація ---
+    const translations = {
+      en: {
+        title: "Radio Stream",
+        play: "Play",
+        pause: "Pause",
+        select_language: "Language",
+        theme_light: "Light",
+        theme_dark: "Dark",
+        now_playing: "Now playing",
+        no_stations: "No stations available",
+        search_placeholder: "Search stations...",
+        prev: "Previous",
+        next: "Next",
+        developer: "Developer",
+        dev_name: "Serhii Hordiichuk"
+      },
+      ua: {
+        title: "Радіо Онлайн",
+        play: "Відтворити",
+        pause: "Пауза",
+        select_language: "Мова",
+        theme_light: "Світла",
+        theme_dark: "Темна",
+        now_playing: "Зараз грає",
+        no_stations: "Немає доступних станцій",
+        search_placeholder: "Пошук станцій...",
+        prev: "Попередня",
+        next: "Наступна",
+        developer: "Розробник",
+        dev_name: "Сергій Гордійчук"
+      }
+    };
+
+    // --- Станції ---
+    const radioStations = {
+      en: [
+        { name: "BBC Radio 1", country: "UK", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one" },
+        { name: "BBC Radio 2", country: "UK", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two" },
+        { name: "Kiss FM UK", country: "UK", url: "https://stream.planetradio.co.uk/kissnational.aac" },
+        { name: "Capital FM", country: "UK", url: "https://media-ice.musicradio.com/CapitalMP3" },
+        { name: "Heart London", country: "UK", url: "https://media-ice.musicradio.com/HeartLondonMP3" },
+        { name: "Absolute Radio", country: "UK", url: "https://ais.absoluteradio.co.uk/absoluteradio.mp3" },
+        { name: "Smooth Radio", country: "UK", url: "https://media-ice.musicradio.com/SmoothLondonMP3" },
+        { name: "Classic FM", country: "UK", url: "https://media-ice.musicradio.com/ClassicFMMP3" },
+        { name: "NPR", country: "USA", url: "https://npr-ice.streamguys1.com/live.mp3" },
+        { name: "WNYC FM", country: "USA", url: "https://fm939.wnyc.org/wnycfm.aac" },
+        { name: "KEXP 90.3 FM", country: "USA", url: "https://kexp-mp3-128.streamguys1.com/kexp128.mp3" },
+        { name: "Radio Paradise", country: "USA", url: "https://stream.radioparadise.com/mp3-192" },
+        { name: "Jazz24", country: "USA", url: "https://live.wostreaming.net/direct/ppm-jazz24mp3-ibc1" },
+        { name: "VOA Learning English", country: "USA", url: "https://voa-ice.streamguys1.com/live.mp3" },
+        { name: "Radio FT (London)", country: "UK", url: "https://stream.radio.co/sb17f7f6fa/listen" },
+        { name: "Musicwire UK", country: "UK", url: "https://uk1.internet-radio.com/proxy/musicwire?mp=/stream" },
+        { name: "BBC 6 Music", country: "UK", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_6music" },
+        { name: "BBC Radio 4", country: "UK", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm" }
+      ],
+      ua: [
+        { name: "Радіо НВ", country: "Україна", url: "https://radio.nv.ua:8000/nv128.mp3" },
+        { name: "Хіт FM", country: "Україна", url: "https://online.hitfm.ua/HitFM" },
+        { name: "Радіо Рокс", country: "Україна", url: "https://online.radioroks.ua/RadioROKS" },
+        { name: "Перець FM", country: "Україна", url: "https://online.perec.fm/PerecFM" },
+        { name: "Люкс FM", country: "Україна", url: "https://icecast.luxnet.ua/luxmp3" },
+        { name: "Kiss FM UA", country: "Україна", url: "https://online.kissfm.ua/KissFM" },
+        { name: "Наше Радіо", country: "Україна", url: "https://nashe1.hostingradio.ru/nashe-128.mp3" },
+        { name: "Мелодія FM", country: "Україна", url: "https://online.melodiafm.ua/MelodiaFM" },
+        { name: "Релакс FM", country: "Україна", url: "https://online.relax.ua/Relax" },
+        { name: "Radio Jazz", country: "Україна", url: "https://online.radiojazz.ua/RadioJazz" },
+        { name: "Радіо Байрактар", country: "Україна", url: "https://stream.bayraktar.media/bayraktar" },
+        { name: "Авторадіо", country: "Україна", url: "https://online.avtoradio.ua/Avtoradio" },
+        { name: "DJ FM", country: "Україна", url: "https://online.djfm.ua/DJFM" },
+        { name: "Power FM", country: "Україна", url: "https://online.powerfm.ua/PowerFM" }
+      ]
+    };
+
+    // --- Визначення мови пристрою ---
+    function detectLanguage() {
+      const navLang = navigator.language || navigator.userLanguage || "en";
+      if (navLang.startsWith("uk")) return "ua";
+      if (navLang.startsWith("en")) return "en";
+      return "en";
+    }
+
+    function saveSetting(key, value) {
+      try { localStorage.setItem(key, value); } catch(e){}
+    }
+    function loadSetting(key, def) {
+      try {
+        return localStorage.getItem(key) || def;
+      } catch(e){ return def; }
+    }
+
+    // --- Основна логіка ---
+    let currentLang = loadSetting("lang", detectLanguage());
+    let currentTheme = loadSetting("theme", "light");
+    let filteredStations = [];
+    let currentStationIdx = 0;
+
+    const langSwitch = document.getElementById("lang-switch");
+    const themeToggle = document.getElementById("theme-toggle");
+    const stationsList = document.getElementById("stations-list");
+    const audioPlayer = document.getElementById("audio-player");
+    const mainTitle = document.getElementById("main-title");
+    const searchInput = document.getElementById("search-input");
+    const searchForm = document.getElementById("search-form");
+    const clearBtn = document.getElementById("clear-btn");
+    const footer = document.getElementById("footer");
+    const footerTitle = document.getElementById("footer-title");
+    const footerCountry = document.getElementById("footer-country");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const footerPlay = document.getElementById("footer-play");
+    const footerStation = document.getElementById("footer-station");
+    const devbar = document.getElementById("devbar");
+
+    function t(key) {
+      return (translations[currentLang] && translations[currentLang][key]) || translations["en"][key] || key;
+    }
+
+    // --- Пошук ---
+    function filterStations(query) {
+      const stations = radioStations[currentLang] || [];
+      if (!query) return stations;
+      query = query.toLowerCase();
+      return stations.filter(s =>
+        s.name.toLowerCase().includes(query) || s.country.toLowerCase().includes(query)
+      );
+    }
+
+    function renderStations(query = "") {
+      filteredStations = filterStations(query);
+      stationsList.innerHTML = "";
+      if (!filteredStations.length) {
+        stationsList.innerHTML = `<div>${t("no_stations")}</div>`;
+        return;
+      }
+      filteredStations.forEach((station, idx) => {
+        const div = document.createElement("div");
+        div.className = "station";
+        div.tabIndex = 0;
+        div.innerHTML = `
+          <div class="station-info">
+            <div class="station-title">${station.name}</div>
+            <div class="station-country">${station.country}</div>
+          </div>
+          <button class="player-btn" title="${t("play")}" data-idx="${idx}">▶️</button>
+        `;
+        // Клік по всьому блоку - теж вибирає станцію
+        div.addEventListener("click", e => {
+          if (!e.target.classList.contains("player-btn")) playStation(idx);
+        });
+        stationsList.appendChild(div);
+      });
+    }
+
+    function updateTexts() {
+      mainTitle.textContent = t("title");
+      searchInput.placeholder = t("search_placeholder");
+      prevBtn.title = t("prev");
+      nextBtn.title = t("next");
+      footerPlay.title = t("play");
+      document.querySelectorAll(".player-btn").forEach(btn => {
+        btn.title = t("play");
+        btn.textContent = "▶️";
+      });
+      updateDevbar();
+    }
+
+    function setTheme(theme) {
+      currentTheme = theme;
+      document.body.classList.toggle("dark", theme === "dark");
+      themeToggle.textContent = theme === "dark" ? "🌞" : "🌙";
+      saveSetting("theme", theme);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      setTheme(currentTheme === "light" ? "dark" : "light");
+    });
+
+    langSwitch.addEventListener("change", e => {
+      currentLang = langSwitch.value;
+      saveSetting("lang", currentLang);
+      renderStations(searchInput.value);
+      updateTexts();
+      stopAudio();
+      currentStationIdx = 0;
+      updateFooter();
+    });
+
+    // --- Пошук ---
+    searchInput.addEventListener("input", function() {
+      renderStations(this.value);
+      if(this.value) clearBtn.style.display = "inline-block";
+      else clearBtn.style.display = "none";
+      currentStationIdx = 0;
+      updateFooter();
+    });
+    searchForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      searchInput.value = "";
+      clearBtn.style.display = "none";
+      renderStations();
+      currentStationIdx = 0;
+      updateFooter();
+    });
+
+    clearBtn.addEventListener("click", function(e){
+      e.preventDefault();
+      searchInput.value = "";
+      clearBtn.style.display = "none";
+      renderStations();
+      currentStationIdx = 0;
+      updateFooter();
+    });
+
+    // --- Відтворення станції ---
+    stationsList.addEventListener("click", function(e){
+      if (e.target.classList.contains("player-btn")) {
+        const idx = parseInt(e.target.getAttribute("data-idx"));
+        playStation(idx);
+      }
+    });
+
+    function playStation(idx) {
+      if (!filteredStations.length) return;
+      const station = filteredStations[idx];
+      if (!station) return;
+      if (currentStationIdx === idx && !audioPlayer.paused) {
+        stopAudio();
+        return;
+      }
+      audioPlayer.src = station.url;
+      audioPlayer.play().then(()=>{
+        currentStationIdx = idx;
+        updateFooter();
+        document.querySelectorAll(".player-btn").forEach((btn, i) => {
+          if (i === idx) {
+            btn.textContent = "⏸️";
+            btn.title = t("pause");
+            let badge = btn.parentNode.querySelector('.nowplaying');
+            if (!badge) {
+              badge = document.createElement('div');
+              badge.className = 'nowplaying';
+              badge.textContent = t("now_playing");
+              btn.parentNode.appendChild(badge);
+            }
+          } else {
+            btn.textContent = "▶️";
+            btn.title = t("play");
+            let badge = btn.parentNode.querySelector('.nowplaying');
+            if (badge) badge.remove();
+          }
+        });
+        footerPlay.textContent = "⏸️";
+        footerPlay.title = t("pause");
+      }).catch(()=>{
+        alert("Can't play this stream.");
+      });
+    }
+
+    function stopAudio() {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+      document.querySelectorAll(".player-btn").forEach(btn => {
+        btn.textContent = "▶️";
+        btn.title = t("play");
+        let badge = btn.parentNode.querySelector('.nowplaying');
+        if (badge) badge.remove();
+      });
+      footerPlay.textContent = "▶️";
+      footerPlay.title = t("play");
+    }
+
+    audioPlayer.addEventListener("ended", stopAudio);
+    audioPlayer.addEventListener("pause", stopAudio);
+
+    // --- Футер ---
+    function updateFooter() {
+      if (!filteredStations.length) {
+        footerTitle.textContent = "-";
+        footerCountry.textContent = "";
+        footerPlay.textContent = "▶️";
+        return;
+      }
+      const station = filteredStations[currentStationIdx] || filteredStations[0];
+      footerTitle.textContent = station.name;
+      footerCountry.textContent = station.country;
+      footerPlay.textContent = (!audioPlayer.paused && audioPlayer.src === station.url) ? "⏸️" : "▶️";
+    }
+
+    prevBtn.addEventListener("click", function(){
+      if (!filteredStations.length) return;
+      currentStationIdx = (currentStationIdx - 1 + filteredStations.length) % filteredStations.length;
+      playStation(currentStationIdx);
+    });
+    nextBtn.addEventListener("click", function(){
+      if (!filteredStations.length) return;
+      currentStationIdx = (currentStationIdx + 1) % filteredStations.length;
+      playStation(currentStationIdx);
+    });
+    footerPlay.addEventListener("click", function(){
+      if (!filteredStations.length) return;
+      if (!audioPlayer.paused && audioPlayer.src === filteredStations[currentStationIdx].url) {
+        stopAudio();
+      } else {
+        playStation(currentStationIdx);
+      }
+    });
+
+    // --- Swipe для футера ---
+    let touchStartX = null;
+    footerStation.addEventListener('touchstart', function(e){
+      if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+    });
+    footerStation.addEventListener('touchend', function(e){
+      if (touchStartX === null) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) {
+        if (dx < 0) nextBtn.click();
+        else prevBtn.click();
+      }
+      touchStartX = null;
+    });
+
+    // --- DevBar ---
+    function updateDevbar() {
+      const year = new Date().getFullYear();
+      let devLabel = t("developer");
+      let devName = t("dev_name");
+      let devLink = `<a href="https://serhiihordiichuk.pp.ua" target="_blank" rel="noopener">`+devName+`</a>`;
+      devbar.innerHTML = (currentLang === "ua")
+        ? `© ${year} ${devLabel} ${devLink}`
+        : `© ${year} ${devLabel} ${devLink}`;
+    }
+
+    // --- Ініціалізація ---
+    function init() {
+      langSwitch.value = currentLang;
+      renderStations();
+      updateTexts();
+      setTheme(currentTheme);
+      filteredStations = filterStations("");
+      currentStationIdx = 0;
+      updateFooter();
+      updateDevbar();
+    }
+    if (!localStorage.getItem("lang")) {
+      currentLang = detectLanguage();
+      saveSetting("lang", currentLang);
+    }
+    init();
+
+    // --- При зміні станцій після пошуку ---
+    searchInput.addEventListener("input", updateFooter);
+
+    // --- Відображення активної станції при кліку на список ---
+    stationsList.addEventListener("click", function(e){
+      if (e.target.closest(".station")) {
+        const idx = Array.from(stationsList.children).indexOf(e.target.closest(".station"));
+        currentStationIdx = idx;
+        updateFooter();
+      }
+    });
+
+    // --- Клавіатурна навігація (Enter по станції) ---
+    stationsList.addEventListener("keydown", function(e){
+      if (e.key === "Enter" && e.target.classList.contains("station")) {
+        const idx = Array.from(stationsList.children).indexOf(e.target);
+        playStation(idx);
+      }
+    });
+  </script>
+</body>
+</html>
